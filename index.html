@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScamSentry — Email & Message Fraud Checker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e1a;
+    --bg-soft:#0d1326;
+    --surface:#141b33;
+    --surface-2:#1b2440;
+    --border:#2a3457;
+    --border-soft:#202a4a;
+    --text:#eef1fb;
+    --text-dim:#8e9ac0;
+    --text-faint:#5d6890;
+    --blue:#3b82f6;
+    --blue-light:#60a5fa;
+    --purple:#9333ea;
+    --purple-light:#c084fc;
+    --green:#22c55e;
+    --amber:#f59e0b;
+    --red:#ef4444;
+    --radius:14px;
+    --radius-lg:20px;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'Inter',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+    --shadow-glow: 0 0 0 1px var(--border), 0 20px 60px -20px rgba(59,130,246,.25);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:'';
+    position:fixed;
+    inset:0;
+    background:
+      radial-gradient(900px 500px at 85% -10%, rgba(147,51,234,.18), transparent 60%),
+      radial-gradient(900px 500px at 10% 0%, rgba(59,130,246,.16), transparent 60%);
+    pointer-events:none;
+    z-index:0;
+  }
+  h1,h2,h3,h4{
+    font-family:var(--font-display);
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  p{margin:0;}
+  a{color:inherit;text-decoration:none;}
+  ::selection{background:rgba(59,130,246,.35);}
+  :focus-visible{outline:2px solid var(--blue-light); outline-offset:2px; border-radius:4px;}
+
+  /* ===== SHARED KEYFRAMES ===== */
+  @keyframes fadeInUp{
+    from{opacity:0; transform:translateY(10px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  @keyframes pulseDot{
+    0%, 100%{box-shadow:0 0 0 3px rgba(34,197,94,.18);}
+    50%{box-shadow:0 0 0 6px rgba(34,197,94,.1);}
+  }
+
+  .accent-blue{color:var(--blue-light);}
+  .accent-purple{color:var(--purple-light);}
+  .gradient-text{
+    background:linear-gradient(95deg, var(--blue-light), var(--purple-light));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+
+  /* ===== NAV ===== */
+  .nav{
+    z-index:50;
+    padding:18px 24px 0;
+  }
+  .nav-inner{
+    max-width:1180px;
+    margin:0 auto;
+    padding:10px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    background:rgba(20,27,51,.7);
+    backdrop-filter:blur(14px);
+    border:1px solid var(--border-soft);
+    border-radius:999px;
+    box-shadow:0 8px 30px -12px rgba(0,0,0,.5);
+    transition:box-shadow .3s, border-color .3s;
+    position:relative;
+  }
+  .nav-inner:hover{
+    border-color:var(--border);
+    box-shadow:0 10px 36px -10px rgba(59,130,246,.25);
+  }
+  .logo{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:1.15rem;
+    flex-shrink:0;
+    padding:6px 8px 6px 6px;
+    border-radius:999px;
+    transition:background .2s;
+  }
+  .logo:hover{background:var(--surface-2);}
+  .logo-mark{
+    width:34px; height:34px;
+    border-radius:9px;
+    background:linear-gradient(135deg, var(--blue), var(--purple));
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  .logo:hover .logo-mark{transform:rotate(-8deg) scale(1.08);}
+  .logo-mark svg{width:18px;height:18px;color:#fff;}
+  .logo-text .sentry{
+    background:linear-gradient(95deg, var(--blue-light), var(--purple-light));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .nav-links{
+    display:flex;
+    gap:6px;
+    list-style:none;
+    margin:0; padding:0;
+    flex-wrap:wrap;
+  }
+  .nav-links a, .nav-toggle{
+    position:relative;
+    font-size:.92rem;
+    font-weight:500;
+    color:var(--text-dim);
+    padding:8px 14px;
+    border-radius:999px;
+    transition:color .2s, background .2s, transform .15s;
+    cursor:pointer;
+    border:none;
+    background:none;
+    font-family:var(--font-body);
+  }
+  .nav-links a:hover{color:var(--text); background:var(--surface-2); transform:translateY(-1px);}
+  .nav-links a:active{transform:translateY(0) scale(.97);}
+  .nav-links a.active{color:var(--text); background:var(--surface-2); box-shadow:inset 0 0 0 1px var(--border);}
+  .nav-links a.active::after{
+    content:'';
+    position:absolute;
+    left:50%; bottom:4px;
+    width:5px; height:5px;
+    border-radius:50%;
+    background:linear-gradient(95deg, var(--blue-light), var(--purple-light));
+    transform:translateX(-50%);
+    animation:popIn .25s ease;
+  }
+  .nav-toggle{display:none;}
+
+  @keyframes popIn{
+    from{transform:translateX(-50%) scale(0); opacity:0;}
+    to{transform:translateX(-50%) scale(1); opacity:1;}
+  }
+
+  @media (max-width: 760px){
+    .nav-links{
+      position:absolute;
+      top:calc(100% + 8px); left:0; right:0;
+      flex-direction:column;
+      background:rgba(20,27,51,.92);
+      backdrop-filter:blur(14px);
+      border:1px solid var(--border-soft);
+      border-radius:22px;
+      padding:10px;
+      display:none;
+      box-shadow:0 12px 30px -10px rgba(0,0,0,.5);
+    }
+    .nav-links.open{display:flex; animation:fadeInUp .2s ease;}
+    .nav-links a{width:100%;}
+    .nav-links a.active::after{display:none;}
+    .nav-toggle{
+      display:flex; align-items:center; justify-content:center;
+      width:38px;height:38px; padding:0;
+      border:1px solid var(--border); border-radius:50%;
+      transition:transform .2s, background .2s;
+    }
+    .nav-toggle:hover{background:var(--surface-2);}
+    .nav-toggle svg{width:18px;height:18px; transition:transform .25s;}
+    .nav-toggle.open svg{transform:rotate(90deg);}
+    .nav-toggle svg{width:18px;height:18px;}
+  }
+
+  /* ===== LAYOUT ===== */
+  main{position:relative; z-index:1;}
+  .page{display:none;}
+  .page.active{display:block; animation:fadeInUp .35s ease;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 24px;}
+
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-family:var(--font-mono);
+    font-size:.78rem;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--blue-light);
+    background:rgba(59,130,246,.1);
+    border:1px solid rgba(59,130,246,.25);
+    padding:6px 14px;
+    border-radius:999px;
+    margin-bottom:18px;
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.18); animation:pulseDot 2s ease-in-out infinite;}
+
+  /* ===== HERO ===== */
+  .hero{padding:64px 0 36px;}
+  .hero-inner{text-align:center; max-width:760px; margin:0 auto;}
+  .hero h1{font-size:clamp(2.1rem, 5vw, 3.4rem); line-height:1.12; font-weight:700;}
+  .hero p.lead{
+    margin-top:18px;
+    font-size:1.08rem;
+    color:var(--text-dim);
+    max-width:560px;
+    margin-left:auto; margin-right:auto;
+  }
+
+  /* ===== CHECKER CARD ===== */
+  .checker{
+    margin:40px auto 0;
+    max-width:880px;
+    background:linear-gradient(180deg, var(--surface), var(--bg-soft));
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:28px;
+    box-shadow:var(--shadow-glow);
+    position:relative;
+    overflow:hidden;
+    animation:fadeInUp .5s ease;
+  }
+  .checker::before{
+    content:'';
+    position:absolute; top:-1px; left:6%; right:6%; height:1px;
+    background:linear-gradient(90deg, transparent, var(--blue-light), var(--purple-light), transparent);
+    opacity:.6;
+  }
+  .checker-grid{display:grid; gap:18px;}
+  .field label{
+    display:block;
+    font-size:.85rem;
+    font-weight:600;
+    margin-bottom:8px;
+    color:var(--text);
+  }
+  .field .hint{
+    display:block;
+    font-size:.78rem;
+    color:var(--text-faint);
+    margin-top:6px;
+    font-family:var(--font-mono);
+  }
+  .field input, .field textarea{
+    width:100%;
+    background:var(--bg-soft);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px 14px;
+    color:var(--text);
+    font-family:var(--font-body);
+    font-size:.95rem;
+    resize:vertical;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .field input:focus, .field textarea:focus{
+    border-color:var(--blue);
+    box-shadow:0 0 0 3px rgba(59,130,246,.18);
+    outline:none;
+    transform:translateY(-1px);
+  }
+  .field textarea{min-height:120px; line-height:1.5;}
+  .field input[type="file"]{
+    padding:9px 14px;
+    font-size:.85rem;
+    color:var(--text-dim);
+    cursor:pointer;
+  }
+  .field input[type="file"]::-webkit-file-upload-button{
+    background:var(--surface-2);
+    color:var(--text);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:6px 12px;
+    margin-right:12px;
+    font-family:var(--font-body);
+    font-size:.82rem;
+    cursor:pointer;
+  }
+
+  .scan-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    width:100%;
+    margin-top:6px;
+    padding:14px 20px;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(95deg, var(--blue), var(--purple));
+    color:#fff;
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:1rem;
+    cursor:pointer;
+    transition:filter .15s, transform .15s, box-shadow .2s;
+    position:relative;
+    overflow:hidden;
+  }
+  .scan-btn::after{
+    content:'';
+    position:absolute; top:0; left:-60%;
+    width:40%; height:100%;
+    background:linear-gradient(115deg, transparent, rgba(255,255,255,.25), transparent);
+    transform:skewX(-20deg);
+    transition:left .6s ease;
+  }
+  .scan-btn:hover::after{left:130%;}
+  .scan-btn:hover{filter:brightness(1.08); transform:translateY(-1px); box-shadow:0 10px 24px -10px rgba(59,130,246,.5);}
+  .scan-btn:active{transform:scale(.99);}
+  .scan-btn:disabled{opacity:.7; cursor:wait;}
+  .scan-btn:disabled::after{display:none;}
+  .scan-btn svg{width:18px;height:18px;}
+  .spin{animation:spin 1s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .form-error{
+    font-size:.85rem;
+    color:var(--amber);
+    margin-top:-4px;
+    display:none;
+  }
+  .form-error.show{display:block;}
+
+  /* ===== RESULTS ===== */
+  .results{
+    margin-top:24px;
+    border-top:1px solid var(--border-soft);
+    padding-top:24px;
+    display:none;
+  }
+  .results.show{display:block; animation:fadeIn .35s ease;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+  @keyframes popBounce{
+    0%{transform:scale(.85); opacity:0;}
+    60%{transform:scale(1.04); opacity:1;}
+    100%{transform:scale(1);}
+  }
+
+  .results-top{
+    display:flex;
+    gap:24px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .gauge-wrap{position:relative; width:160px; height:160px; flex-shrink:0; animation:popBounce .5s cubic-bezier(.34,1.56,.64,1);}
+  .gauge-wrap svg{transform:rotate(-90deg);}
+  .gauge-bg{fill:none; stroke:var(--border); stroke-width:12;}
+  .gauge-fg{
+    fill:none; stroke-width:12; stroke-linecap:round;
+    transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1), stroke 0.3s;
+  }
+  .gauge-center{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    text-align:center;
+  }
+  .gauge-score{font-family:var(--font-display); font-size:2.2rem; font-weight:700; line-height:1;}
+  .gauge-score-sub{font-family:var(--font-mono); font-size:.7rem; color:var(--text-faint); letter-spacing:.1em; margin-top:2px;}
+
+  .results-headline{flex:1; min-width:200px;}
+  .risk-pill{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:6px 14px; border-radius:999px;
+    font-family:var(--font-mono); font-size:.8rem; letter-spacing:.08em; text-transform:uppercase;
+    font-weight:500; margin-bottom:10px;
+    animation:popBounce .5s cubic-bezier(.34,1.56,.64,1);
+  }
+  .risk-pill svg{width:14px;height:14px;}
+  .risk-pill.safe{background:rgba(34,197,94,.12); color:var(--green); border:1px solid rgba(34,197,94,.3);}
+  .risk-pill.suspicious{background:rgba(245,158,11,.12); color:var(--amber); border:1px solid rgba(245,158,11,.3);}
+  .risk-pill.danger{background:rgba(239,68,68,.12); color:var(--red); border:1px solid rgba(239,68,68,.3);}
+  .results-headline h3{font-size:1.3rem;}
+  .results-headline p{color:var(--text-dim); margin-top:6px; font-size:.92rem;}
+
+  .findings{list-style:none; margin:24px 0 0; padding:0; display:grid; gap:10px;}
+  .finding{
+    display:flex; gap:12px;
+    padding:14px 16px;
+    background:var(--bg-soft);
+    border:1px solid var(--border-soft);
+    border-radius:10px;
+    font-size:.92rem;
+    opacity:0;
+    animation:fadeInUp .4s ease forwards;
+    transition:border-color .2s, transform .15s;
+  }
+  .finding:hover{border-color:var(--border); transform:translateX(2px);}
+  .finding .ic{flex-shrink:0; width:20px; height:20px; margin-top:1px;}
+  .finding.high .ic{color:var(--red);}
+  .finding.med .ic{color:var(--amber);}
+  .finding.low .ic{color:var(--blue-light);}
+  .finding.ok .ic{color:var(--green);}
+  .finding-tag{
+    font-family:var(--font-mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--text-faint); display:block; margin-bottom:3px;
+  }
+
+  /* ===== AI DEEP SCAN ===== */
+  .ai-scan{
+    margin-top:24px;
+    border-top:1px solid var(--border-soft);
+    padding-top:20px;
+  }
+  .ai-scan-head{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:pointer;
+    flex-wrap:wrap;
+  }
+  .ai-scan-head h4{font-size:1rem; display:flex; align-items:center; gap:8px;}
+  .ai-scan-head h4 svg{width:18px;height:18px; color:var(--purple-light); transition:transform .6s ease;}
+  .ai-scan-head:hover h4 svg{transform:rotate(180deg);}
+  .ai-toggle-btn{
+    font-family:var(--font-mono); font-size:.78rem; color:var(--blue-light);
+    background:var(--bg-soft); border:1px solid var(--border); border-radius:999px;
+    padding:6px 14px; cursor:pointer;
+    transition:border-color .2s, transform .15s;
+  }
+  .ai-toggle-btn:hover{border-color:var(--blue); transform:translateY(-1px);}
+  .ai-scan-body{display:none; margin-top:16px;}
+  .ai-scan-body.open{display:block; animation:fadeInUp .3s ease;}
+  .ai-scan-body p{color:var(--text-dim); font-size:.9rem;}
+  .ai-row{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;}
+  .ai-row input{
+    flex:1; min-width:200px;
+    background:var(--bg-soft); border:1px solid var(--border); border-radius:10px;
+    padding:11px 14px; color:var(--text); font-family:var(--font-mono); font-size:.85rem;
+  }
+  .btn-secondary{
+    background:var(--surface-2); color:var(--text); border:1px solid var(--border);
+    border-radius:10px; padding:11px 18px; font-family:var(--font-display); font-weight:600;
+    font-size:.88rem; cursor:pointer; white-space:nowrap;
+    transition:border-color .2s, transform .15s;
+  }
+  .btn-secondary:hover{border-color:var(--blue); transform:translateY(-1px);}
+  .btn-secondary:active{transform:translateY(0) scale(.98);}
+  .ai-result{
+    margin-top:14px; padding:14px 16px; border-radius:10px;
+    background:var(--bg-soft); border:1px solid var(--border-soft);
+    font-size:.92rem; white-space:pre-wrap; display:none; font-family:var(--font-body);
+  }
+  .ai-result.show{display:block; animation:fadeInUp .35s ease;}
+  .ai-status{font-size:.82rem; color:var(--text-faint); margin-top:8px; font-family:var(--font-mono);}
+
+  /* ===== SECTIONS ===== */
+  .section{padding:60px 0;}
+  .section-head{text-align:center; max-width:620px; margin:0 auto 40px;}
+  .section-head h2{font-size:clamp(1.6rem, 4vw, 2.2rem);}
+  .section-head p{color:var(--text-dim); margin-top:12px;}
+
+  /* ===== HOW IT WORKS ===== */
+  .steps{
+    display:grid; gap:0;
+    grid-template-columns:repeat(3,1fr);
+    max-width:980px; margin:0 auto;
+  }
+  .step{position:relative; padding:0 20px;}
+  .step-num{
+    font-family:var(--font-display); font-weight:700; font-size:.85rem;
+    color:var(--bg); width:36px; height:36px; border-radius:50%;
+    background:linear-gradient(135deg, var(--blue), var(--purple));
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom:16px; position:relative; z-index:1;
+    transition:transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s;
+  }
+  .step:hover .step-num{transform:scale(1.12) rotate(-6deg); box-shadow:0 6px 20px -6px rgba(147,51,234,.5);}
+  .step h3{font-size:1.1rem; margin-bottom:8px;}
+  .step p{color:var(--text-dim); font-size:.92rem;}
+  .step::after{
+    content:''; position:absolute; top:18px; left:calc(50% + 38px); right:calc(-50% + 38px);
+    height:1px; background:var(--border);
+  }
+  .step:last-child::after{display:none;}
+
+  .check-cards{
+    display:grid; gap:18px;
+    grid-template-columns:repeat(3,1fr);
+    max-width:980px; margin:48px auto 0;
+  }
+  .check-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:22px;
+    transition:transform .2s, border-color .2s, box-shadow .2s;
+  }
+  .check-card:hover{
+    transform:translateY(-4px);
+    border-color:var(--blue);
+    box-shadow:0 14px 32px -16px rgba(59,130,246,.35);
+  }
+  .check-card .ic-wrap{
+    width:40px; height:40px; border-radius:10px;
+    background:rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.25);
+    display:flex; align-items:center; justify-content:center; margin-bottom:14px;
+    color:var(--blue-light);
+    transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  .check-card:hover .ic-wrap{transform:scale(1.1) rotate(8deg);}
+  .check-card .ic-wrap svg{width:20px;height:20px;}
+  .check-card h3{font-size:1.05rem; margin-bottom:8px;}
+  .check-card p{color:var(--text-dim); font-size:.9rem;}
+  .check-card ul{margin:10px 0 0; padding-left:18px; color:var(--text-dim); font-size:.88rem;}
+  .check-card li{margin-bottom:4px;}
+
+  @media (max-width:760px){
+    .steps, .check-cards{grid-template-columns:1fr; gap:32px;}
+    .step::after{display:none;}
+  }
+
+  /* ===== SAFETY TIPS ===== */
+  .tips-grid{
+    display:grid; gap:18px;
+    grid-template-columns:repeat(auto-fit, minmax(260px,1fr));
+  }
+  .tip-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:22px; transition:border-color .2s, transform .2s, box-shadow .2s;
+  }
+  .tip-card:hover{border-color:var(--blue); transform:translateY(-4px); box-shadow:0 14px 32px -16px rgba(59,130,246,.3);}
+  .tip-card .ic-wrap{
+    width:42px; height:42px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center; margin-bottom:14px;
+    transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  .tip-card:hover .ic-wrap{transform:scale(1.12) rotate(-8deg);}
+  .tip-card .ic-wrap svg{width:21px;height:21px;}
+  .tip-card.t-green .ic-wrap{background:rgba(34,197,94,.12); color:var(--green); border:1px solid rgba(34,197,94,.25);}
+  .tip-card.t-blue .ic-wrap{background:rgba(59,130,246,.12); color:var(--blue-light); border:1px solid rgba(59,130,246,.25);}
+  .tip-card.t-purple .ic-wrap{background:rgba(147,51,234,.12); color:var(--purple-light); border:1px solid rgba(147,51,234,.25);}
+  .tip-card.t-amber .ic-wrap{background:rgba(245,158,11,.12); color:var(--amber); border:1px solid rgba(245,158,11,.25);}
+  .tip-card h3{font-size:1.02rem; margin-bottom:8px;}
+  .tip-card p{color:var(--text-dim); font-size:.9rem;}
+
+  /* ===== FAQ ===== */
+  .faq-list{max-width:760px; margin:0 auto; display:grid; gap:12px;}
+  .faq-item{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    overflow:hidden; transition:border-color .2s;
+  }
+  .faq-item:hover{border-color:var(--border-soft); border-color:var(--blue);}
+  .faq-q{
+    width:100%; text-align:left; background:none; border:none; color:var(--text);
+    padding:18px 20px; font-family:var(--font-display); font-weight:600; font-size:.98rem;
+    display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:pointer;
+    transition:background .2s;
+  }
+  .faq-q:hover{background:var(--surface-2);}
+  .faq-q svg{width:18px; height:18px; flex-shrink:0; transition:transform .25s cubic-bezier(.34,1.56,.64,1); color:var(--blue-light);}
+  .faq-item.open .faq-q svg{transform:rotate(45deg);}
+  .faq-a{
+    max-height:0; overflow:hidden; transition:max-height .3s ease, opacity .25s ease;
+    padding:0 20px; color:var(--text-dim); font-size:.92rem; opacity:0;
+  }
+  .faq-item.open .faq-a{max-height:240px; padding-bottom:18px; opacity:1;}
+
+  /* ===== ABOUT ===== */
+  .about-content{max-width:980px; margin:0 auto; display:grid; gap:20px;}
+  .about-content h3{font-size:1.1rem; margin-bottom:8px; margin-top:6px;}
+  .about-content p{color:var(--text-dim); font-size:.95rem;}
+  .callout{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:20px;
+    display:flex; gap:14px;
+  }
+  .callout svg{width:22px; height:22px; flex-shrink:0; margin-top:1px;}
+  .callout.warn{border-color:rgba(245,158,11,.3);}
+  .callout.warn svg{color:var(--amber);}
+  .callout.info svg{color:var(--blue-light);}
+  .callout p{margin:0; font-size:.9rem;}
+  .callout strong{color:var(--text);}
+
+  /* ===== FOOTER ===== */
+  .footer{
+    border-top:1px solid var(--border-soft);
+    padding:36px 0;
+    margin-top:20px;
+  }
+  .footer-inner{
+    display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;
+  }
+  .footer p{color:var(--text-faint); font-size:.82rem;}
+  .footer .logo{font-size:1rem;}
+
+  @media (max-width:600px){
+    .hero{padding:40px 0 24px;}
+    .checker{padding:20px;}
+    .results-top{flex-direction:column; text-align:center;}
+    .footer-inner{flex-direction:column; text-align:center;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= NAV ================= -->
+<header class="nav">
+  <div class="nav-inner">
+    <a href="#" class="logo" data-page="checker">
+      <span class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg>
+      </span>
+      <span class="logo-text">Scam<span class="sentry">Sentry</span></span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#" data-page="checker" class="active">Checker</a></li>
+      <li><a href="#" data-page="how">How It Works</a></li>
+      <li><a href="#" data-page="tips">Safety Tips</a></li>
+      <li><a href="#" data-page="faq">FAQ</a></li>
+      <li><a href="#" data-page="about">About</a></li>
+    </ul>
+  </div>
+</header>
+
+<main>
+
+  <!-- ================= PAGE: CHECKER ================= -->
+  <section class="page active" id="page-checker">
+    <div class="wrap">
+      <div class="hero">
+        <div class="hero-inner">
+          <div class="eyebrow"><span class="dot"></span> Email & Message Fraud Checker</div>
+          <h1>Before you click, <span class="gradient-text">check.</span></h1>
+          <p class="lead">Paste a sender's email address and the message you received. ScamSentry scans both — plus any links inside — for the patterns scammers use most often, and gives you a plain-language trust score in seconds.</p>
+        </div>
+
+        <div class="checker">
+          <div class="checker-grid">
+            <div class="field">
+              <label for="senderEmail">Sender's email address</label>
+              <input type="text" id="senderEmail" placeholder="e.g. support@paypa1-secure.com">
+              <span class="hint">Optional, but helps catch lookalike domains.</span>
+            </div>
+            <div class="field">
+              <label for="messageText">Message content</label>
+              <textarea id="messageText" placeholder="Paste the full email or message text here, including any links it contains..."></textarea>
+              <span class="hint">We'll scan the wording and any links pasted inside automatically.</span>
+            </div>
+            <div class="field">
+              <label for="fileUpload">Or upload a file (.txt, .eml, .msg, .html)</label>
+              <input type="file" id="fileUpload" accept=".txt,.eml,.msg,.html,.htm">
+              <span class="hint">The file's content loads into the box above — nothing is uploaded anywhere, it's read directly by your browser.</span>
+            </div>
+            <div class="form-error" id="formError">Please paste an email address or a message to scan.</div>
+            <button class="scan-btn" id="scanBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span id="scanBtnLabel">Scan for fraud</span>
+            </button>
+          </div>
+
+          <!-- RESULTS -->
+          <div class="results" id="results">
+            <div class="results-top">
+              <div class="gauge-wrap">
+                <svg viewBox="0 0 160 160" width="160" height="160">
+                  <circle class="gauge-bg" cx="80" cy="80" r="68"/>
+                  <circle class="gauge-fg" id="gaugeFg" cx="80" cy="80" r="68" stroke-dasharray="427.26" stroke-dashoffset="427.26"/>
+                </svg>
+                <div class="gauge-center">
+                  <div class="gauge-score" id="gaugeScore">--</div>
+                  <div class="gauge-score-sub">TRUST SCORE</div>
+                </div>
+              </div>
+              <div class="results-headline">
+                <div class="risk-pill" id="riskPill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+                  <span id="riskLabel">—</span>
+                </div>
+                <h3 id="resultHeadline">Scanning...</h3>
+                <p id="resultSub">Here's what we found in what you pasted.</p>
+              </div>
+            </div>
+
+            <ul class="findings" id="findings"></ul>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PAGE: HOW IT WORKS ================= -->
+  <section class="page" id="page-how">
+    <div class="wrap section">
+      <div class="section-head">
+        <div class="eyebrow"><span class="dot"></span> How It Works</div>
+        <h2>Three steps, no signup, nothing leaves your browser.</h2>
+        <p>The core scan runs entirely on your device using a set of pattern checks built from common scam tactics. Nothing you type is uploaded unless you choose to run the optional AI Deep Scan with your own key.</p>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Paste</h3>
+          <p>Drop in the sender's email address and the full message — links included. The more context you give, the more accurate the read.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>Scan</h3>
+          <p>ScamSentry checks the address, wording, and any links against patterns seen in phishing, lottery, and "urgent account" scams.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Decide</h3>
+          <p>You get a 0–100 trust score, a risk level, and a plain-English breakdown of exactly what raised — or didn't raise — a flag.</p>
+        </div>
+      </div>
+
+      <div class="check-cards">
+        <div class="check-card">
+          <div class="ic-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+          </div>
+          <h3>The sender's address</h3>
+          <p>We check for:</p>
+          <ul>
+            <li>Lookalike domains (e.g. "paypa1.com")</li>
+            <li>Brand names sent from free email providers</li>
+            <li>Unusual or throwaway domain endings</li>
+            <li>Auto-generated-looking domains</li>
+          </ul>
+        </div>
+        <div class="check-card">
+          <div class="ic-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <h3>The message wording</h3>
+          <p>We look for language patterns common in scams:</p>
+          <ul>
+            <li>Urgency and threats ("act now", "account suspended")</li>
+            <li>Requests for OTPs, passwords, or card details</li>
+            <li>Prize, lottery, or "you've won" language</li>
+            <li>Generic greetings and excessive caps/punctuation</li>
+          </ul>
+        </div>
+        <div class="check-card">
+          <div class="ic-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          </div>
+          <h3>Links inside the message</h3>
+          <p>Any URL pasted in is checked for:</p>
+          <ul>
+            <li>Link shorteners that hide the real destination</li>
+            <li>Raw IP addresses instead of domain names</li>
+            <li>Lookalike or hyphen-heavy domains</li>
+            <li>Missing encryption (no HTTPS)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PAGE: SAFETY TIPS ================= -->
+  <section class="page" id="page-tips">
+    <div class="wrap section">
+      <div class="section-head">
+        <div class="eyebrow"><span class="dot"></span> Safety Tips</div>
+        <h2>Habits that stop most scams before they start.</h2>
+        <p>A scanner helps, but a few simple habits catch what no tool can — because they rely on you pausing before you act.</p>
+      </div>
+
+      <div class="tips-grid">
+        <div class="tip-card t-blue">
+          <div class="ic-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <h3>Never share OTPs or PINs</h3>
+          <p>No bank, courier, or government office will ever call or message you asking for a one-time password, PIN, or CVV. Sharing it hands over full access to your account.</p>
+        </div>
+        <div class="tip-card t-purple">
+          <div class="ic-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+          </div>
+          <h3>Check the sender's actual address</h3>
+          <p>Look past the display name. "Amazon Support" can still be sent from a random Gmail account or a domain with swapped letters like "amaz0n.com".</p>
+        </div>
+        <div class="tip-card t-green">
+          <div class="ic-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          </div>
+          <h3>Hover before you click</h3>
+          <p>On a computer, hover over a link to see where it really goes. On mobile, press and hold to preview the address. If it doesn't match the company name, don't tap.</p>
+        </div>
+        <div class="tip-card t-amber">
+          <div class="ic-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          </div>
+          <h3>Urgency is a red flag</h3>
+          <p>"Your account will be closed in 24 hours" is designed to make you panic and skip the part where you'd normally double-check. Real deadlines from real companies rarely work this way.</p>
+        </div>
+        <div class="tip-card t-blue">
+          <div class="ic-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          </div>
+          <h3>Too good to be true, is</h3>
+          <p>Lottery wins for contests you never entered, free phones, or huge refunds you didn't expect are almost always bait to get you to click or pay a "fee".</p>
+        </div>
+        <div class="tip-card t-purple">
+          <div class="ic-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <h3>Verify through a separate channel</h3>
+          <p>If a message claims to be your bank, don't reply or click — open your banking app, or call the number printed on your card, to check independently.</p>
+        </div>
+        <div class="tip-card t-green">
+          <div class="ic-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 1 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          </div>
+          <h3>Don't open unexpected attachments</h3>
+          <p>Invoices, "delivery failure" notices, or resumes from people you don't know can carry malware. If you weren't expecting a file, confirm with the sender first — separately.</p>
+        </div>
+        <div class="tip-card t-amber">
+          <div class="ic-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+          </div>
+          <h3>Turn on two-factor authentication</h3>
+          <p>Even if a password leaks, 2FA on your email and banking apps adds a second lock that most scammers can't get past.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PAGE: FAQ ================= -->
+  <section class="page" id="page-faq">
+    <div class="wrap section">
+      <div class="section-head">
+        <div class="eyebrow"><span class="dot"></span> FAQ</div>
+        <h2>Common questions</h2>
+        <p>If something's still unclear after this, treat any message you're unsure about as risky and verify it independently.</p>
+      </div>
+
+      <div class="faq-list">
+        <div class="faq-item">
+          <button class="faq-q">Is the trust score 100% accurate?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          <div class="faq-a"><p>No tool can be. ScamSentry highlights patterns that are common in scams, but determined scammers can write a clean message with no obvious flags, and some legitimate companies write messages that sound urgent. Treat the score as a second opinion, not a final verdict — especially if money, passwords, or personal details are involved.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">Does this store or send my data anywhere?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          <div class="faq-a"><p>The core scan runs entirely in your browser — nothing you type is sent to a server. The only exception is the optional "AI Deep Scan", which sends your input directly to Anthropic's API using an API key you provide, and only when you click that button.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">What counts as "high risk"?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          <div class="faq-a"><p>A score below 50 means we found one or more strong red flags — like a request for your password or OTP, a lookalike domain, or a link pointing to a raw IP address. These are patterns almost never used by legitimate senders.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">Can I check SMS or WhatsApp messages too?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          <div class="faq-a"><p>Yes. Paste the message text into the "Message content" box even if it came as a text or chat message. You can leave the email field empty — the wording and link checks work the same way.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">A score came back low, but the message seems fine — now what?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          <div class="faq-a"><p>Read through the findings list — each one explains exactly what triggered it. Some legitimate companies do use urgent language or shortened links, so a flag isn't proof of fraud. When in doubt, contact the company directly through their official website or app rather than replying to the message.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">I already clicked a suspicious link — what should I do?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          <div class="faq-a"><p>If you entered a password or card details, change that password immediately and contact your bank or card provider to flag possible fraud. If you only opened the link without entering anything, run a security scan on your device and avoid downloading anything it offered.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PAGE: ABOUT ================= -->
+  <section class="page" id="page-about">
+    <div class="wrap section">
+      <div class="section-head">
+        <div class="eyebrow"><span class="dot"></span> About</div>
+        <h2>A second pair of eyes before you click</h2>
+        <p>Built for the moment you get a message that feels slightly off but you can't quite say why.</p>
+      </div>
+
+      <div class="about-content">
+        <div>
+          <h3>What ScamSentry is</h3>
+          <p>ScamSentry is a free, browser-based tool that scans an email address, message text, and any links inside it for patterns commonly seen in phishing, fraud, and spam. It's built for everyday people — not security experts — who want a quick, plain-language read on whether a message looks safe before they reply, click, or share information.</p>
+        </div>
+
+        <div class="check-cards" style="margin-top:4px;">
+          <div class="check-card">
+            <div class="ic-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <h3>Runs in your browser</h3>
+            <p>The core scan needs no account, no installation, and no server — everything happens on your device the moment you click "Scan".</p>
+          </div>
+          <div class="check-card">
+            <div class="ic-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg>
+            </div>
+            <h3>Free, no limits</h3>
+            <p>No sign-up, no daily caps, no premium tier. Built as a public-good tool anyone can use whenever a message feels off.</p>
+          </div>
+          <div class="check-card">
+            <div class="ic-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            </div>
+            <h3>Plain language</h3>
+            <p>Every flag is explained in everyday words — no jargon, no scores without context, so you actually understand the "why".</p>
+          </div>
+        </div>
+
+        <div>
+          <h3>How the scan works</h3>
+          <p>The core checker uses a set of rules drawn from well-documented scam tactics: lookalike domains, requests for sensitive information, urgency and threat language, prize and lottery wording, link shorteners, and raw-IP links, among others. Each match adjusts a 0–100 trust score and is explained in the results so you understand exactly why.</p>
+        </div>
+
+        <div>
+          <h3>Who this is for</h3>
+          <p>Anyone who's ever paused over a message and thought "wait, is this real?" — parents and grandparents navigating unfamiliar tech, students and job-seekers dealing with a flood of offers and "selections", small business owners getting "urgent invoice" emails, and anyone who's been targeted by SMS or WhatsApp scams claiming to be a bank, courier, or government office. You don't need any technical background to read the results.</p>
+        </div>
+
+        <div>
+          <h3>Why this exists</h3>
+          <p>Most fraud doesn't rely on sophisticated hacking — it relies on a moment of distraction, urgency, or trust. A short pause to run a message through a checker like this can be the difference between deleting a scam and losing money or access to an account. ScamSentry exists to make that pause easy, fast, and judgment-free.</p>
+        </div>
+
+        <div>
+          <h3>What this isn't</h3>
+          <p>This is not antivirus software, a spam filter for your inbox, a fraud reporting service, or a way to recover lost funds. It doesn't connect to your email account, doesn't scan your inbox automatically, and doesn't block or delete anything. It simply reads what you paste in and tells you what it notices — nothing more, nothing less.</p>
+        </div>
+
+        <div>
+          <h3>Where this is headed</h3>
+          <p>Planned additions include support for analyzing screenshots of messages, a browser extension for one-click checks, and an expanded pattern library covering more region-specific scam formats (courier scams, fake job offers, UPI/payment fraud, and impersonation of local government services). The optional AI Deep Scan will continue to be opt-in and never required for the core check to work.</p>
+        </div>
+
+        <div class="callout warn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          <p><strong>Not a substitute for official security tools.</strong> ScamSentry is a heuristic helper, not antivirus software, a law enforcement tool, or a guarantee of safety. For anything involving money, passwords, or legal matters, always verify directly with the organization involved through a channel you trust.</p>
+        </div>
+
+        <div class="callout info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <p><strong>Your privacy:</strong> everything you paste into the main checker stays on your device — nothing is logged, stored, or sent anywhere. The optional AI Deep Scan is the only feature that sends data externally, and only when you choose to use it with your own API key, which is itself stored only in your browser.</p>
+        </div>
+
+        <div>
+          <h3>Feedback</h3>
+          <p>This tool is most useful when it reflects scams people are actually seeing. If a message slips through, or a flag doesn't make sense, that's useful to know — patterns and wording get refined over time based on exactly that kind of feedback.</p>
+          <p>You can share feedback, report a missed scam pattern, or just say Hi at <a href="mailto:DevSamarthasati@proton
+             mail .com">
+   <ul>DevSamarthasati@protonmail.com</ul>
+           </a></p>
+        </div>
+      </div>
+    </div>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <a href="#" class="logo" data-page="checker">
+      <span class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg>
+      </span>
+      <span class="logo-text">Scam<span class="sentry">Sentry</span></span>
+    </a>
+    <p>Pattern-based checker only. Always verify anything involving money or passwords through an official channel.</p>
+  </div>
+</footer>
+
+<script>
+  /* ===================== NAV ===================== */
+  const navLinks = document.querySelectorAll('.nav-links a, a.logo[data-page]');
+  const pages = document.querySelectorAll('.page');
+  const navToggle = document.getElementById('navToggle');
+  const navLinksEl = document.getElementById('navLinks');
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const target = link.getAttribute('data-page');
+      pages.forEach(p => p.classList.toggle('active', p.id === 'page-' + target));
+      document.querySelectorAll('.nav-links a').forEach(a => a.classList.toggle('active', a.getAttribute('data-page') === target));
+      navLinksEl.classList.remove('open');
+      window.scrollTo({top:0, behavior:'instant'});
+    });
+  });
+  navToggle.addEventListener('click', () => navLinksEl.classList.toggle('open'));
+
+  /* ===================== FAQ ACCORDION ===================== */
+  document.querySelectorAll('.faq-item').forEach(item => {
+    item.querySelector('.faq-q').addEventListener('click', () => {
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if(!wasOpen) item.classList.add('open');
+    });
+  });
+
+  /* ===================== HEURISTIC ENGINE ===================== */
+  const FREE_PROVIDERS = ['gmail.com','yahoo.com','outlook.com','hotmail.com','rediffmail.com','aol.com','protonmail.com','icloud.com','live.com','yandex.com','mail.com'];
+  const SUSPICIOUS_TLDS = ['xyz','top','club','online','site','live','icu','work','biz','info','ru','tk','ml','ga','cf','gq','click','loan','rest','pro'];
+  const SHORTENERS = ['bit.ly','tinyurl.com','t.co','goo.gl','ow.ly','is.gd','buff.ly','rebrand.ly','cutt.ly','rb.gy','shorturl.at','tiny.cc'];
+  const BRANDS = ['paypal','amazon','microsoft','apple','google','netflix','bank','irs','facebook','instagram','whatsapp','dhl','fedex','ups','wellsfargo','chase','icici','hdfc','sbi','axis','flipkart','linkedin','outlook'];
+
+  const CREDENTIAL_WORDS = ['password','otp','one-time password','one time password','pin number','cvv','card number','social security','ssn','bank details','login credentials','aadhaar','net banking'];
+  const REWARD_WORDS = ['congratulations','you have won','you have been selected','winner','claim your prize','lottery','free gift','cash prize','selected for a reward'];
+  const MONEY_WORDS = ['wire transfer','gift card','bitcoin','crypto','western union','processing fee','pay a fee','refundable deposit'];
+  const URGENCY_WORDS = ['urgent','immediately','act now','expires today','expiring soon','account suspended','account locked','verify your account','within 24 hours','final notice','last warning','restricted access'];
+  const THREAT_WORDS = ['legal action','account will be closed','suspend your account','permanently disabled','court notice','penalty','will be arrested'];
+  const GENERIC_GREETINGS = ['dear customer','dear user','dear valued customer','dear sir/madam','dear account holder'];
+
+  function normalizeForLookalike(s){
+    return s.replace(/0/g,'o').replace(/1/g,'l').replace(/3/g,'e').replace(/5/g,'s').replace(/rn/g,'m').replace(/vv/g,'w');
+  }
+
+  function analyzeEmail(email){
+    const flags = [];
+    const e = email.trim().toLowerCase();
+    if(!e) return flags;
+    const atIdx = e.lastIndexOf('@');
+    if(atIdx === -1 || atIdx === 0 || atIdx === e.length - 1){
+      flags.push({sev:'low', text:"That doesn't look like a complete email address — double check the spelling."});
+      return flags;
+    }
+    const local = e.slice(0, atIdx);
+    const domain = e.slice(atIdx + 1);
+    const domainParts = domain.split('.');
+    const tld = domainParts[domainParts.length - 1];
+
+    if(SUSPICIOUS_TLDS.includes(tld)){
+      flags.push({sev:'med', text:`The sender's domain ends in ".${tld}" — an ending often picked for cheap, throwaway scam domains rather than established companies.`});
+    }
+
+    const mentionedBrand = BRANDS.find(b => local.includes(b) || domain.includes(b));
+    if(mentionedBrand && FREE_PROVIDERS.includes(domain)){
+      flags.push({sev:'high', text:`The address references "${mentionedBrand}" but is sent from a free ${domain} account — real companies don't email customers from personal accounts.`});
+    }
+
+    const normalizedDomain = normalizeForLookalike(domain);
+    for(const b of BRANDS){
+      if(normalizedDomain.includes(b) && !domain.includes(b)){
+        flags.push({sev:'high', text:`The domain "${domain}" closely resembles "${b}" with characters swapped (like 0 for o, or 1 for l) to fool a quick glance.`});
+        break;
+      }
+    }
+
+    if(/\d{4,}/.test(domainParts[0])){
+      flags.push({sev:'low', text:`The domain contains a long string of digits, a trait common in auto-generated scam domains.`});
+    }
+
+    return flags;
+  }
+
+  function analyzeMessage(text){
+    const flags = [];
+    if(!text) return flags;
+    const t = text.toLowerCase();
+
+    const hit = (words, sev, template) => {
+      const found = words.find(w => t.includes(w));
+      if(found) flags.push({sev, text: template.replace('{w}', found)});
+    };
+
+    hit(CREDENTIAL_WORDS, 'high', 'Asks for sensitive information ("{w}") — legitimate organizations never request this by email or message.');
+    hit(REWARD_WORDS, 'high', 'Uses prize or reward language ("{w}") — a classic sign of a scam for a contest you never entered.');
+    hit(MONEY_WORDS, 'high', 'Mentions "{w}" — a common request in advance-fee and gift card scams.');
+    hit(URGENCY_WORDS, 'med', 'Creates urgency with phrasing like "{w}" to pressure you into acting before you think it through.');
+    hit(THREAT_WORDS, 'med', 'Uses a threat ("{w}") to scare you into responding quickly.');
+    hit(GENERIC_GREETINGS, 'low', 'Opens with a generic greeting ("{w}") instead of your name — bulk scam messages rarely personalize this.');
+
+    const words = text.split(/\s+/).filter(w => w.length > 2);
+    const capsWords = words.filter(w => w === w.toUpperCase() && /[A-Z]/.test(w));
+    if(words.length > 4 && capsWords.length / words.length > 0.15){
+      flags.push({sev:'low', text:'Uses an unusually large amount of ALL CAPS text, a common attention-grabbing tactic in spam.'});
+    }
+
+    if((text.match(/!/g) || []).length >= 3){
+      flags.push({sev:'low', text:'Uses multiple exclamation marks, a common trait of spammy or hyped-up messages.'});
+    }
+
+    return flags;
+  }
+
+  function analyzeLinks(text){
+    const flags = [];
+    if(!text) return flags;
+    const urlRegex = /(https?:\/\/[^\s<>"')]+)|(\bwww\.[^\s<>"')]+)/gi;
+    const matches = text.match(urlRegex) || [];
+    const seen = new Set();
+
+    for(const raw of matches){
+      let urlStr = raw;
+      if(!/^https?:\/\//i.test(urlStr)) urlStr = 'http://' + urlStr;
+      let host;
+      try{
+        host = new URL(urlStr).hostname.toLowerCase();
+      } catch(e){ continue; }
+      if(seen.has(host)) continue;
+      seen.add(host);
+
+      if(!/^https:\/\//i.test(raw) && !raw.toLowerCase().startsWith('www')){
+        if(/^http:\/\//i.test(raw)){
+          flags.push({sev:'low', text:`The link to "${host}" uses plain HTTP, meaning the connection isn't encrypted.`});
+        }
+      }
+
+      if(SHORTENERS.includes(host)){
+        flags.push({sev:'med', text:`"${host}" is a link shortener — it hides the real destination until after you click.`});
+      }
+
+      if(/^\d{1,3}(\.\d{1,3}){3}$/.test(host)){
+        flags.push({sev:'high', text:`A link points directly to an IP address (${host}) instead of a normal domain name — a strong sign of a scam page.`});
+      }
+
+      const parts = host.split('.');
+      const tld = parts[parts.length - 1];
+      if(SUSPICIOUS_TLDS.includes(tld)){
+        flags.push({sev:'med', text:`A link uses "${host}", with a ".${tld}" domain ending that's frequently used for scam pages.`});
+      }
+
+      if((host.match(/-/g) || []).length >= 3){
+        flags.push({sev:'low', text:`A link domain ("${host}") is unusually long and hyphenated — a pattern often used to imitate a real brand.`});
+      }
+
+      const normalizedHost = normalizeForLookalike(host);
+      for(const b of BRANDS){
+        if(normalizedHost.includes(b) && !host.includes(b)){
+          flags.push({sev:'high', text:`A link domain ("${host}") closely resembles "${b}" with characters swapped to fool a quick glance.`});
+          break;
+        }
+      }
+    }
+
+    return flags;
+  }
+
+  const SEVERITY_WEIGHT = {high: 22, med: 12, low: 5};
+  const SEVERITY_ORDER = {high: 0, med: 1, low: 2, ok: 3};
+  const SEVERITY_TAG = {high: 'High risk', med: 'Caution', low: 'Minor', ok: 'Looks fine'};
+
+  function runScan(){
+    const emailVal = document.getElementById('senderEmail').value;
+    const messageVal = document.getElementById('messageText').value;
+
+    if(!emailVal.trim() && !messageVal.trim()){
+      document.getElementById('formError').classList.add('show');
+      return;
+    }
+    document.getElementById('formError').classList.remove('show');
+
+    const btn = document.getElementById('scanBtn');
+    const label = document.getElementById('scanBtnLabel');
+    btn.disabled = true;
+    label.textContent = 'Scanning...';
+    btn.querySelector('svg').classList.add('spin');
+
+    setTimeout(() => {
+      let flags = [
+        ...analyzeEmail(emailVal),
+        ...analyzeMessage(messageVal),
+        ...analyzeLinks(messageVal)
+      ];
+      flags.sort((a,b) => SEVERITY_ORDER[a.sev] - SEVERITY_ORDER[b.sev]);
+
+      let score = 100;
+      flags.forEach(f => score -= SEVERITY_WEIGHT[f.sev]);
+      score = Math.max(0, Math.min(100, score));
+
+      renderResults(score, flags);
+
+      btn.disabled = false;
+      label.textContent = 'Scan for fraud';
+      btn.querySelector('svg').classList.remove('spin');
+    }, 900);
+  }
+
+  function renderResults(score, flags){
+    const results = document.getElementById('results');
+    results.classList.add('show');
+
+    // Gauge
+    const circumference = 2 * Math.PI * 68;
+    const offset = circumference * (1 - score / 100);
+    const gauge = document.getElementById('gaugeFg');
+    gauge.style.strokeDasharray = circumference;
+    gauge.style.strokeDashoffset = offset;
+    document.getElementById('gaugeScore').textContent = score;
+
+    let level, color, headline, sub, pillSvg;
+    if(score >= 80){
+      level = 'safe'; color = 'var(--green)';
+      headline = 'Looks safe';
+      sub = "We didn't find significant red flags — but always stay alert with unexpected messages.";
+      pillSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+    } else if(score >= 50){
+      level = 'suspicious'; color = 'var(--amber)';
+      headline = 'Looks suspicious';
+      sub = "A few patterns here are common in scam messages. Read the findings below before you act.";
+      pillSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>';
+    } else {
+      level = 'danger'; color = 'var(--red)';
+      headline = 'High risk of fraud';
+      sub = "This matches several patterns common in scams. Avoid clicking links or sharing any details.";
+      pillSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+    }
+    gauge.style.stroke = color;
+    document.getElementById('resultHeadline').textContent = headline;
+    document.getElementById('resultSub').textContent = sub;
+
+    const pill = document.getElementById('riskPill');
+    pill.className = 'risk-pill ' + level;
+    pill.innerHTML = pillSvg + '<span>' + (level === 'safe' ? 'Likely safe' : level === 'suspicious' ? 'Suspicious' : 'High risk') + '</span>';
+
+    const findingsEl = document.getElementById('findings');
+    findingsEl.innerHTML = '';
+
+    if(flags.length === 0){
+      const li = document.createElement('li');
+      li.className = 'finding ok';
+      li.style.animationDelay = '0.05s';
+      li.innerHTML = `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <div><span class="finding-tag">${SEVERITY_TAG.ok}</span>No common scam patterns were detected in what you pasted. Still, if something feels off, verify through an official channel before acting.</div>`;
+      findingsEl.appendChild(li);
+    } else {
+      flags.forEach((f, i) => {
+        const li = document.createElement('li');
+        li.className = 'finding ' + f.sev;
+        li.style.animationDelay = (i * 0.07) + 's';
+        const icon = f.sev === 'high'
+          ? '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+          : f.sev === 'med'
+          ? '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>'
+          : '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
+        li.innerHTML = `${icon}<div><span class="finding-tag">${SEVERITY_TAG[f.sev]}</span>${f.text}</div>`;
+        findingsEl.appendChild(li);
+      });
+    }
+  }
+
+  document.getElementById('scanBtn').addEventListener('click', runScan);
+
+  /* ===================== FILE UPLOAD ===================== */
+  document.getElementById('fileUpload').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      let content = String(ev.target.result || '');
+
+      // Try to pull a sender address out of .eml-style headers
+      const fromMatch = content.match(/^From:.*?<?([\w.+-]+@[\w-]+\.[\w.-]+)>?/im);
+      const emailField = document.getElementById('senderEmail');
+      if(fromMatch && !emailField.value.trim()){
+        emailField.value = fromMatch[1];
+      }
+
+      // If it looks like HTML, strip tags down to plain text
+      if(/<\/?(html|body|div|p|table|a)\b/i.test(content)){
+        const tmp = document.createElement('div');
+        tmp.innerHTML = content;
+        content = tmp.textContent || tmp.innerText || content;
+      }
+
+      document.getElementById('messageText').value = content.trim();
+      document.getElementById('formError').classList.remove('show');
+    };
+    reader.onerror = () => {
+      document.getElementById('messageText').value = '';
+      alert('Could not read that file. Try a plain .txt or .eml file instead.');
+    };
+    reader.readAsText(file);
+  });
+
+  /* ===================== AI DEEP SCAN ===================== */
+  const aiToggleHead = document.getElementById('aiToggleHead');
+  const aiBody = document.getElementById('aiBody');
+  const aiToggleBtn = document.getElementById('aiToggleBtn');
+
+  function toggleAi(){
+    const open = aiBody.classList.toggle('open');
+    aiToggleBtn.textContent = open ? 'Hide' : 'Set up';
+  }
+  aiToggleHead.addEventListener('click', toggleAi);
+
+  const apiKeyInput = document.getElementById('apiKey');
+  const savedKey = localStorage.getItem('scamsentry_api_key');
+  if(savedKey) apiKeyInput.value = savedKey;
+
+  document.getElementById('saveKeyBtn').addEventListener('click', () => {
+    localStorage.setItem('scamsentry_api_key', apiKeyInput.value.trim());
+    const status = document.getElementById('aiStatus');
+    status.textContent = 'Key saved in this browser.';
+    setTimeout(() => status.textContent = '', 2500);
+  });
+
+  document.getElementById('runAiBtn').addEventListener('click', async () => {
+    const key = apiKeyInput.value.trim();
+    const status = document.getElementById('aiStatus');
+    const resultBox = document.getElementById('aiResult');
+    const emailVal = document.getElementById('senderEmail').value.trim();
+    const messageVal = document.getElementById('messageText').value.trim();
+
+    if(!key){
+      status.textContent = 'Add your Anthropic API key above first, then click "Save key".';
+      return;
+    }
+    if(!emailVal && !messageVal){
+      status.textContent = 'Add an email address or message above first.';
+      return;
+    }
+
+    resultBox.classList.remove('show');
+    status.textContent = 'Contacting AI for a deeper read...';
+
+    try{
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 500,
+          messages: [{
+            role: 'user',
+            content: `You are a fraud-detection assistant. Analyze the following for signs of phishing, scam, or spam. Sender email: "${emailVal || '(not provided)'}". Message: "${messageVal || '(not provided)'}". Give a short verdict (Safe / Suspicious / High risk), then 2-4 bullet points explaining why, in plain language for a non-technical person.`
+          }]
+        })
+      });
+
+      if(!response.ok){
+        let errMsg = `Request failed (status ${response.status}).`;
+        try{
+          const errJson = await response.json();
+          if(errJson?.error?.message) errMsg = errJson.error.message;
+        } catch(e){}
+        throw new Error(errMsg);
+      }
+
+      const data = await response.json();
+      const text = (data.content || []).map(b => b.text || '').join('\n').trim();
+      resultBox.textContent = text || 'No response received.';
+      resultBox.classList.add('show');
+      status.textContent = 'Done.';
+    } catch(err){
+      resultBox.textContent = 'Error: ' + err.message;
+      resultBox.classList.add('show');
+      status.textContent = 'Could not complete AI scan: ' + err.message + '. Check your API key and that direct browser access is enabled for it.';
+    }
+  });
+</script>
+
+</body>
+</html>
