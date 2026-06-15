@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0e1a">
 <title>ScamSentry — Email & Message Fraud Checker</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%233b82f6'/%3E%3Cstop offset='1' stop-color='%239333ea'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='24' height='24' rx='5' fill='url(%23g)'/%3E%3Cpath d='M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='m9 12 2 2 4-4' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -34,7 +36,7 @@
   }
 
   *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
+  html{scroll-behavior:smooth; overflow-x:hidden;}
   body{
     margin:0;
     background:var(--bg);
@@ -42,6 +44,8 @@
     font-family:var(--font-body);
     line-height:1.6;
     -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    width:100%;
   }
   body::before{
     content:'';
@@ -453,11 +457,12 @@
   .ai-scan-body p{color:var(--text-dim); font-size:.9rem;}
   .ai-row{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;}
   .ai-row input{
-    flex:1; min-width:200px;
+    flex:1 1 200px; min-width:0; width:100%;
     background:var(--bg-soft); border:1px solid var(--border); border-radius:10px;
     padding:11px 14px; color:var(--text); font-family:var(--font-mono); font-size:.85rem;
   }
   .btn-secondary{
+    flex:1 1 auto;
     background:var(--surface-2); color:var(--text); border:1px solid var(--border);
     border-radius:10px; padding:11px 18px; font-family:var(--font-display); font-weight:600;
     font-size:.88rem; cursor:pointer; white-space:nowrap;
@@ -472,6 +477,18 @@
   }
   .ai-result.show{display:block; animation:fadeInUp .35s ease;}
   .ai-status{font-size:.82rem; color:var(--text-faint); margin-top:8px; font-family:var(--font-mono);}
+
+  .ai-key-setup{
+    background:var(--bg-soft); border:1px solid var(--border-soft); border-radius:10px;
+    padding:14px 16px; margin-top:12px;
+  }
+  .ai-setup-note{color:var(--text-dim); font-size:.85rem; margin:0 0 10px;}
+  .ai-setup-note a{color:var(--blue-light); font-weight:600; transition:color .2s;}
+  .ai-setup-note a:hover{color:var(--purple-light);}
+  #aiRunRow{margin-top:12px; align-items:stretch;}
+  #aiRunRow .scan-btn{width:auto; flex:2 1 220px; margin-top:0; padding:11px 18px; font-size:.92rem;}
+  #aiRunRow .scan-btn svg{width:16px;height:16px;}
+  #aiRunRow .btn-secondary{flex:0 0 auto;}
 
   /* ===== SECTIONS ===== */
   .section{padding:60px 0;}
@@ -540,7 +557,7 @@
   /* ===== SAFETY TIPS ===== */
   .tips-grid{
     display:grid; gap:18px;
-    grid-template-columns:repeat(auto-fit, minmax(260px,1fr));
+    grid-template-columns:repeat(auto-fit, minmax(min(260px, 100%),1fr));
   }
   .tip-card{
     background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
@@ -601,21 +618,101 @@
 
   /* ===== FOOTER ===== */
   .footer{
+    padding:40px 24px 48px;
+  }
+  .footer-card{
+    max-width:1180px; margin:0 auto;
+    background:linear-gradient(180deg, var(--surface), var(--bg-soft));
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:36px 32px 22px;
+    position:relative;
+    overflow:hidden;
+  }
+  .footer-card::before{
+    content:'';
+    position:absolute; top:-1px; left:6%; right:6%; height:1px;
+    background:linear-gradient(90deg, transparent, var(--blue-light), var(--purple-light), transparent);
+    opacity:.5;
+  }
+  .footer-grid{
+    display:grid;
+    grid-template-columns:1.3fr 1fr 1fr;
+    gap:32px;
+  }
+  .footer-brand .logo{font-size:1.1rem; padding:0; margin-bottom:12px; display:inline-flex;}
+  .footer-brand .logo:hover{background:none;}
+  .footer-brand p{color:var(--text-dim); font-size:.88rem; max-width:340px; margin-bottom:18px;}
+  .footer-col h4{
+    font-family:var(--font-mono); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--text-faint); margin-bottom:14px; font-weight:500;
+  }
+  .footer-col a{
+    display:flex; align-items:center; gap:6px;
+    font-size:.9rem; color:var(--text-dim);
+    padding:5px 0; cursor:pointer;
+    transition:color .2s, transform .15s, gap .2s;
+    width:fit-content;
+  }
+  .footer-col a:hover{color:var(--text); transform:translateX(3px);}
+  .footer-col a svg{width:13px; height:13px; opacity:0; transition:opacity .2s; flex-shrink:0;}
+  .footer-col a:hover svg{opacity:1;}
+  .footer-col p{color:var(--text-dim); font-size:.88rem;}
+
+  .footer-bottom{
     border-top:1px solid var(--border-soft);
-    padding:36px 0;
-    margin-top:20px;
+    margin-top:28px; padding-top:18px;
+    display:flex; justify-content:space-between; align-items:center;
+    gap:14px; flex-wrap:wrap;
   }
-  .footer-inner{
-    display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;
+  .footer-bottom p{color:var(--text-faint); font-size:.8rem;}
+  .footer-links{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
   }
-  .footer p{color:var(--text-faint); font-size:.82rem;}
-  .footer .logo{font-size:1rem;}
+  .footer-links a{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:.8rem; color:var(--text-dim);
+    padding:6px 12px; border-radius:999px;
+    border:1px solid var(--border); background:var(--bg-soft);
+    transition:color .2s, border-color .2s, transform .15s;
+  }
+  .footer-links a:hover{color:var(--text); border-color:var(--blue); transform:translateY(-1px);}
+  .footer-links a svg{width:13px; height:13px;}
+
+  @media (max-width:760px){
+    .footer-grid{grid-template-columns:1fr; gap:28px;}
+    .footer-bottom{flex-direction:column; align-items:flex-start;}
+  }
 
   @media (max-width:600px){
     .hero{padding:40px 0 24px;}
     .checker{padding:20px;}
     .results-top{flex-direction:column; text-align:center;}
-    .footer-inner{flex-direction:column; text-align:center;}
+    .gauge-wrap{width:140px; height:140px;}
+    .nav{padding:14px 14px 0;}
+    .nav-inner{padding:8px 10px;}
+    .logo-text{font-size:1rem;}
+    .findings{gap:8px;}
+    .finding{padding:12px 14px; font-size:.88rem;}
+    .ai-row{flex-direction:column;}
+    .ai-row input, .ai-row .btn-secondary{width:100%;}
+  }
+
+  @media (max-width:400px){
+    .wrap{padding:0 16px;}
+    .logo-text{font-size:.92rem;}
+    .logo-mark{width:30px; height:30px;}
+    .gauge-wrap{width:120px; height:120px;}
+    .gauge-score{font-size:1.8rem;}
+    .hero h1{font-size:1.9rem;}
+    .checker{padding:16px;}
+    .footer-card{padding:24px 18px 16px;}
+    .nav-links a, .nav-toggle{padding:8px 12px;}
+  }
+
+  @media (min-width:1440px){
+    .wrap{max-width:1320px;}
+    .footer-card, .nav-inner{max-width:1320px;}
   }
 </style>
 </head>
@@ -701,9 +798,8 @@
                 <p id="resultSub">Here's what we found in what you pasted.</p>
               </div>
             </div>
-
-            <ul class="findings" id="findings"></ul>
-
+            
+            </div>
           </div>
         </div>
       </div>
@@ -966,30 +1062,61 @@
         <div>
           <h3>Feedback</h3>
           <p>This tool is most useful when it reflects scams people are actually seeing. If a message slips through, or a flag doesn't make sense, that's useful to know — patterns and wording get refined over time based on exactly that kind of feedback.</p>
-          <p>You can share feedback, report a missed scam pattern, or just say Hi at <a href="mailto:DevSamarthasati@proton
-             mail .com">
-   <ul>DevSamarthasati@protonmail.com</ul>
-           </a></p>
         </div>
       </div>
     </div>
+  </section>
+
 </main>
 
 <footer class="footer">
-  <div class="wrap footer-inner">
-    <a href="#" class="logo" data-page="checker">
-      <span class="logo-mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg>
-      </span>
-      <span class="logo-text">Scam<span class="sentry">Sentry</span></span>
-    </a>
-    <p>Pattern-based checker only. Always verify anything involving money or passwords through an official channel.</p>
+  <div class="footer-card">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#" class="logo" data-page="checker">
+          <span class="logo-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg>
+          </span>
+          <span class="logo-text">Scam<span class="sentry">Sentry</span></span>
+        </a>
+        <p>A free, browser-based checker that scans an email, message, and any links inside it for patterns common in phishing, fraud, and spam — with a plain-language breakdown of what it found.</p>
+        <div class="footer-links">
+          <a href="mailto:DevSamarthasati@proton.me">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+            Contact
+          </a>
+          <a href="https://samarthhh.vercel.app/" target="_blank" rel="opener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg>
+            Portfolio
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h4>Explore</h4>
+        <a data-page="checker">Checker<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+        <a data-page="how">How It Works<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+        <a data-page="tips">Safety Tips<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+        <a data-page="faq">FAQ<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+        <a data-page="about">About<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Good to know</h4>
+        <p>Everything you paste into the checker stays on your device — nothing is logged or stored..</p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© 2026 ScamSentry. Built as a free public tool — not a substitute for official security software.</p>
+      <p>Pattern-based checker only. Always verify anything involving money or passwords through an official channel.</p>
+    </div>
   </div>
 </footer>
 
 <script>
   /* ===================== NAV ===================== */
-  const navLinks = document.querySelectorAll('.nav-links a, a.logo[data-page]');
+  const navLinks = document.querySelectorAll('.nav-links a, a.logo[data-page], .footer-col a[data-page]');
   const pages = document.querySelectorAll('.page');
   const navToggle = document.getElementById('navToggle');
   const navLinksEl = document.getElementById('navLinks');
