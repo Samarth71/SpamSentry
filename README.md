@@ -1,5 +1,5 @@
 # SpamSentry
- Full-stack fraud detection platform utilizing pattern-matching algorithms to score and flag malicious messages/Emails 
+ fraud detection platform utilizing pattern-matching algorithms to score and flag malicious messages/Emails 
 
 SpamSentry is a web-based application designed to protect users from online fraud, phishing attempts, and deceptive messages. In today's digital world, scam emails and fraudulent text messages have become highly sophisticated, often tricking people into sharing sensitive information. This project provides a simple yet effective solution by allowing users to verify the legitimacy of any suspicious text before taking action.
 
